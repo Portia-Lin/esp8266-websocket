@@ -6,9 +6,7 @@
 byte output = 2;
 byte button = 0;
 String web = webpage;
-unsigned long timing;
 boolean flag = 0;
-boolean wsStatus = 0;
 char ssid[] = "AstriaPorta";
 char pass[]= "69632300369969";
 
@@ -70,22 +68,15 @@ void loop() {
 void webSocketEvent(byte num, WStype_t type, uint8_t * payload, size_t length) {
   switch(type) {
     case WStype_DISCONNECTED:
-      wsStatus = 0;
       Serial.print("[WS] Type ");
       Serial.print(type);
       Serial.println(": DISCONNECTED");
       break;
     case WStype_CONNECTED:
-      wsStatus = 1;
+      broadcastState();
       Serial.print("[WS] Type ");
       Serial.print(type);
       Serial.println(": CONNECTED");
-      if (digitalRead(output) == LOW) {
-        webSocket.broadcastTXT("0");
-      }
-      if (digitalRead(output) == HIGH) {
-        webSocket.broadcastTXT("1");
-      }
       break;
     case WStype_TEXT:
     Serial.print("[WS] Type ");
@@ -94,6 +85,7 @@ void webSocketEvent(byte num, WStype_t type, uint8_t * payload, size_t length) {
       if (payload[0] == 't')
       {
           digitalWrite(output, !digitalRead(output));
+          broadcastState();
           Serial.print("[WS] Payload: ");
           Serial.println(payload[0]);
       }
@@ -101,14 +93,11 @@ void webSocketEvent(byte num, WStype_t type, uint8_t * payload, size_t length) {
 }
 
 void broadcastState() {
-  if (wsStatus == 1 && millis() - timing > 200) {
-    timing = millis();
-    if (digitalRead(output) == LOW) {
-      webSocket.broadcastTXT("0");
-    }
-    if (digitalRead(output) == HIGH) {
-      webSocket.broadcastTXT("1");
-    }
+  if (digitalRead(output) == HIGH) {
+    webSocket.broadcastTXT("0");
+  }
+  if (digitalRead(output) == LOW) {
+    webSocket.broadcastTXT("1");
   }
 }
 
@@ -116,6 +105,7 @@ void checkButton() {
   if (digitalRead(button) == LOW && flag == 0) {
     flag = 1;
     digitalWrite(output, !digitalRead(output));
+    broadcastState();
     }
   if (digitalRead(button) == HIGH && flag == 1) {
     flag = 0;
