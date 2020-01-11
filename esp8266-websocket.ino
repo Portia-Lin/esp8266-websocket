@@ -1,16 +1,15 @@
 #include "index.h"
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
+#include <WiFiManager.h>
 #include <WebSocketsServer.h>
 
 byte output = 2;
 byte button = 0;
 String web = webpage;
 boolean flag = 0;
-char ssid[] = "AstriaPorta";
-char pass[]= "69632300369969";
 
-WiFiServer server(80);
+ESP8266WebServer server(80);
 WebSocketsServer webSocket = WebSocketsServer(81);
 
 void setup() {
@@ -21,48 +20,36 @@ void setup() {
   Serial.begin(115200);
   Serial.println();
   Serial.println("***");
-  Serial.print("[WIFI] Connecting to ");
-  Serial.println("ssid");
-  WiFi.begin(ssid, pass);
-  int count = 0; 
-  while ( (WiFi.status() != WL_CONNECTED) && count < 17) 
-  {
-      Serial.print(". ");  delay(500);  count++;
-  }
- 
-  if (WiFi.status() != WL_CONNECTED)
-  { 
-     Serial.println("");
-     Serial.print("[WIFI] Failed to connect to ");
-     Serial.println(ssid);
-     while(1);
+  Serial.println("Waiting for reset wifi!");
+  for (int i = 0; i < 4; i++) {
+    Serial.print(".");
+    delay(1000);
   }
   Serial.println("");
-  Serial.println("[WIFI] Connected to WiFi");
-  Serial.print("[WIFI] IP: ");
+  WiFi.hostname("ESP8266");
+  WiFiManager wifiManager;
+  if(digitalRead(0) == LOW) {
+    wifiManager.resetSettings();
+    Serial.println("Reset saved settings!");
+  }
+  wifiManager.setTimeout(180);
+  wifiManager.autoConnect("ESP8266");
+  Serial.print("Server IP: ");
   Serial.println(WiFi.localIP()); 
-
+  server.on("/", []() {
+    server.send(200, "text/html", web);
+  });
   server.begin();
   webSocket.begin();
   Serial.println("[WS] Server started");
   webSocket.onEvent(webSocketEvent);
-
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  broadcastState();
   checkButton();
+  server.handleClient();
   webSocket.loop();
-  WiFiClient client = server.available();     // Check if a client has connected
-    if (!client)  {  return;  }
-      if (client) {
-  }
- 
-    client.flush();
-    client.print( web ); 
- 
-    delay(5);
 }
 
 void webSocketEvent(byte num, WStype_t type, uint8_t * payload, size_t length) {
@@ -82,12 +69,11 @@ void webSocketEvent(byte num, WStype_t type, uint8_t * payload, size_t length) {
     Serial.print("[WS] Type ");
       Serial.print(type);
       Serial.println(": TEXT");
-      if (payload[0] == 't')
-      {
-          digitalWrite(output, !digitalRead(output));
-          broadcastState();
-          Serial.print("[WS] Payload: ");
-          Serial.println(payload[0]);
+      if (payload[0] == 't') {
+        digitalWrite(output, !digitalRead(output));
+        broadcastState();
+        Serial.print("[WS] Payload: ");
+        Serial.println(payload[0]);
       }
   }
 }
