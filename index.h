@@ -23,31 +23,34 @@ const char webpage[] PROGMEM = R"=====(
 
 	button {
 		display: block;
-		width: 100%;
-		padding: 1rem 0rem;
+		width: 10rem;
+		height: 10rem;
 		border: none;
-		border-radius: 0.5rem;
-		background-color: #DA5868;
-		font-family: 'Montserrat', sans-serif;
-		font-size: 11pt;
-		letter-spacing: 0.05rem;
-		text-align: center;
-		font-weight: bold;
-		text-decoration: none;
+		border-radius: 25%;
+		margin-left: auto;
+		margin-right: auto;
+		background-color: #DBE1EA;
 		outline: none;
-		color: white;
 	}
 
 	button:active {
-		background-color: #CD3341;
+		background-color: #E9E9E6;
 	}
+ 
+  #circl {
+    transition: stroke 1s ease;
+  }
 </style>
 
 <body>
 	<div class="container">
-		<h1 class="center">TEST PAGE</h1><br>
-		<h1 class="center" id="state">---</h1><br>
-		<button type="button" id="switch"> Toggle</button><br>
+		<h1 class="center">TEST PAGE</h1>
+		<h1 class="center" id="state">---</h1> <br> <br>
+		<button type="button" id="switch">
+			<svg width="9rem" height="9rem">
+				<circle id="circl" r="4rem" cx="4.5rem" cy="4.5rem" fill="none" stroke="#000000" stroke-width="0.2rem" />
+			</svg>
+		</button> <br> <br>
 		<p class="center">Recieved data = <span id='rd'>---</span></p>
 	</div>
 </body>
@@ -64,9 +67,11 @@ const char webpage[] PROGMEM = R"=====(
 		document.getElementById('rd').innerHTML = evt.data;
 		if (evt.data === '0') {
 			document.getElementById('state').innerHTML = 'O F F';
+			document.getElementById('circl').style.stroke = '#F583AE';
 		}
 		if (evt.data === '1') {
 			document.getElementById('state').innerHTML = 'O N';
+			document.getElementById('circl').style.stroke = '#2BAAFF';
 		}
 	}
 
